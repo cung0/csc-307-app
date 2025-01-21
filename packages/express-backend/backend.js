@@ -1,8 +1,9 @@
 // backend.js
 import express from "express";
+import cors from "cors";
 
 const app = express();
-const port = 5173;
+const port = 5700;
 
 const users = {
   users_list: [
@@ -49,7 +50,7 @@ const findUserByNameAndJob = (name, job) => {
 const findUserById = (id) => users["users_list"].find((user) => user["id"] === id);
 
 
-
+app.use(cors())
 app.use(express.json());
 
 
