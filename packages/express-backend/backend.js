@@ -78,13 +78,17 @@ app.get("/users", (req, res) => {
   }
 });
 
+
+
 const addUser = (user) => {
+  user.id = Math.random()
   users["users_list"].push(user);
   return user;
 }
 
 function findAttributeIndex(array, attr, value){
   for (var i = 0; i < array.length; i += 1){
+    console.log(array[i][attr], value.id)
     if (array[i][attr] === value.id){
       return i;
     }
@@ -93,7 +97,7 @@ function findAttributeIndex(array, attr, value){
 }
 
 const removeUser = (id) => {
-  console.log(id);
+
   const index = findAttributeIndex(users["users_list"], "id", id)
   if (index != -1){
     users["users_list"].splice(index, 1)
@@ -104,17 +108,29 @@ const removeUser = (id) => {
 
 app.post("/users", (req, res) => {
   const userToAdd = req.body;
-  addUser(userToAdd);
-  res.send();
+  const addedUser = addUser(userToAdd)
+  if (addedUser){
+    res.status(201).send(addedUser)
+  } else {
+    res.status(404).send("Resource not found.");
+  }
 });
 
 app.delete("/users", (req, res) => {
   const userToRemove = req.body;
-  removeUser(userToRemove);
-  res.send();
+  if (removeUser(userToRemove)){
+    res.status(204).send();
+  } else {
+    res.status(404).send("Resource not found.");
+  }
 });
 
-
+app.post("/log", (req, res) => {
+  const message = req.body
+  if (message) {
+    console.log("Message", message);
+  }
+})
 
 app.get("/users/:id", (req, res) => {
   const id = req.params.id;
