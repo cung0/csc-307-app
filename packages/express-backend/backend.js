@@ -1,7 +1,7 @@
 // backend.js
 import express from "express";
 import cors from "cors";
-import user_services from "./user.js"
+import user_services from "./user_services.js"
 
 const app = express();
 const port = 5700;
@@ -39,18 +39,26 @@ app.get("/", (req, res) => {
 app.get("/users", (req, res) => {
   const name = req.query.name;
   const job = req.query.job
-
+  let result;
   if (name != undefined && job != undefined) {
-    let result = findUserByNameAndJob(name, job)
-    result = { users_list: result };
-    res.send(result);
+    result = user_services.findUserByNameAndJob(name, job);
   } else if (name != undefined) {
-    let result = findUserByName(name)
-    result = { users_list: result };
-    res.send(result);
+    result = user_services.findUserByName(name);
   } else {
-    res.send(users);
+    result = user_services.getUsers();
   }
+
+  result
+    .then((result) => {
+      if (result){
+        res.send({users_list: result});
+      } else {
+        res.status(404).send("Resource not found.");
+      }
+    })
+    .catch((error) =>
+      res.status(500).send("Server Error")
+    );
 });
 
 const addUser = (user) => {
@@ -81,21 +89,25 @@ const removeUser = (id) => {
 
 app.post("/users", (req, res) => {
   const userToAdd = req.body;
-  const addedUser = addUser(userToAdd)
-  if (addedUser){
-    res.status(201).send(addedUser)
+  const result = user_services.addUser(userToAdd);
+  if (result){
+    res.status(201).send(result);
   } else {
     res.status(404).send("Resource not found.");
   }
 });
 
 app.delete("/users", (req, res) => {
-  const userToRemove = req.body;
-  if (removeUser(userToRemove)){
-    res.status(204).send();
-  } else {
-    res.status(404).send("Resource not found.");
-  }
+  const id = req.params.id;
+  const result = user_services.findUserById(id);
+  result
+    .then((result) => {
+      return user_services.deleteUserById(id)
+      .then(() => {
+        removeUser(id);
+        res.status(204).send();
+      })
+    })
 });
 
 app.post("/log", (req, res) => {
@@ -107,7 +119,8 @@ app.post("/log", (req, res) => {
 
 app.get("/users/:id", (req, res) => {
   const id = req.params.id;
-  let result = findUserById(id);
+  const result = user_services.findUserById(id);
+
   if (result === undefined) {
     res.status(404).send("Resource not found.");
   } else {
